@@ -1,35 +1,78 @@
 import React, { Component, createContext } from "react";
-
+import axios from "axios";
 export const TodoContext = createContext();
 
 export default class TodoContextProvider extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      todos: [
-        { name: "do something" },
-        { name: "do another" },
-        { name: "do else" },
-      ],
+      todos: [],
     };
+    this.readTodo();
   }
 
   // create
   createTodo(event, todo) {
     event.preventDefault();
-    let todos = [...this.state.todos];
-    todos.push(todo);
-    this.setState({ todos });
+
+    axios
+      .post("/api/todo/create", todo)
+      .then((response) => {
+        let todos = [...this.state.todos];
+        todos.push(response.data.todo);
+        this.setState({ todos });
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   }
 
   // read
-  readTodo() {}
+  readTodo() {
+    axios
+      .get("/api/todo/read")
+      .then((response) => {
+        this.setState({
+          todos: response.data,
+        });
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }
 
   // update
-  updateTodo() {}
+  updateTodo(data) {
+    axios
+      .put("/api/todo/update/" + data.id, data)
+      .then(() => {
+        let todos = [...this.state.todos];
+        let todo = todos.find((todo) => todo.id === data.id);
+
+        todo.name = data.name;
+
+        this.setState({
+          todos,
+        });
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }
 
   // delete
-  deleteTodo() {}
+  deleteTodo(data) {
+    axios.delete("/api/todo/delete/" + data.id).then(() => {
+      let todos = [...this.state.todos];
+      let todo = todos.find((todo) => todo.id === data.id);
+
+      todos.splice(todos.indexOf(todo), 1);
+
+      this.setState({
+        todos,
+      });
+    });
+  }
 
   render() {
     return (
